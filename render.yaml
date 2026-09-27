@@ -6,9 +6,56 @@ services:
     branch: develop
     region: frankfurt
     plan: starter
-    dockerfilePath: ./docker/Dockerfile
+    dockerfilePath: ./render/frappe/Dockerfile
     dockerContext: .
     healthCheckPath: /crm
+    numInstances: 1
+    disk:
+      name: frappe-data
+      mountPath: /home/frappe/frappe-bench
+      sizeGB: 10
     envVars:
+      - key: DB_HOST
+        fromService:
+          name: frappe-mariadb
+          type: pserv
+          property: host
       - key: MYSQL_ROOT_PASSWORD
-        sync: false
+        fromService:
+          name: frappe-mariadb
+          type: pserv
+          envVarKey: MARIADB_ROOT_PASSWORD
+      - key: REDIS_URL
+        fromService:
+          name: frappe-redis
+          type: keyvalue
+          property: connectionString
+      - key: ADMIN_PASSWORD
+        generateValue: true
+
+  - type: pserv
+    name: frappe-mariadb
+    runtime: docker
+    repo: https://github.com/burduk-dev/crm
+    branch: develop
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./render/mariadb/Dockerfile
+    dockerContext: .
+    disk:
+      name: mariadb-data
+      mountPath: /var/lib/mysql
+      sizeGB: 10
+    envVars:
+      - key: MARIADB_ROOT_PASSWORD
+        generateValue: true
+      - key: MARIADB_DATABASE
+        value: frappe
+
+  - type: keyvalue
+    name: frappe-redis
+    region: frankfurt
+    plan: free
+    maxmemoryPolicy: noeviction
+    persistenceMode: off
+    ipAllowList: []
