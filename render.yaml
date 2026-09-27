@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: frappe-crm
+    runtime: docker
+    repo: https://github.com/burduk-dev/crm
+    branch: develop
+    region: frankfurt
+    plan: starter
+    dockerfilePath: ./docker/Dockerfile
+    dockerContext: .
+    healthCheckPath: /crm
+    envVars:
+      - key: MYSQL_ROOT_PASSWORD
+        sync: false
